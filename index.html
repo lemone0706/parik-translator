@@ -64,15 +64,40 @@
             }).join('');
         }
 
+        // セミコロンで区切り、大文字化を考慮して処理する関数
+        function processParikSegments(parikText) {
+            let isUpperCase = false; // 大文字化フラグ
+            return parikText.split(';').map(segment => {
+                // 大文字化の指示があればフラグを更新
+                if (segment.includes(':')) {
+                    segment = segment.replace(/:(\w)/g, (_, char) => {
+                        isUpperCase = true; // 次の文字を大文字化
+                        return char;
+                    });
+                }
+
+                // パリク語をモールス信号に変換
+                const morseSignal = parikToMorse(segment);
+
+                // モールス信号を文字に変換
+                let result = morseToText(morseSignal);
+
+                // 大文字化を適用
+                if (isUpperCase) {
+                    result = result.charAt(0).toUpperCase() + result.slice(1);
+                    isUpperCase = false; // フラグをリセット
+                }
+
+                return result;
+            }).join('');
+        }
+
         // パリク語 > モールス信号 > 文字に変換する機能
         document.getElementById('translate-btn').addEventListener('click', () => {
             const originalText = document.getElementById('original-text').value;
 
-            // パリク語をモールス信号に変換
-            const morseSignal = parikToMorse(originalText);
-
-            // モールス信号を文字に変換
-            const translatedText = morseToText(morseSignal);
+            // セミコロンで区切り、大文字を処理しながら翻訳
+            const translatedText = processParikSegments(originalText);
 
             document.getElementById('translated-text').value = translatedText;
         });
