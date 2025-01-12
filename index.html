@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>パリク語翻訳サイト</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background: linear-gradient(270deg, #ff0000, #ffa500, #ffff00, #008000, #0000ff, #4b0082, #ee82ee);
+            background-size: 1400% 1400%;
+            animation: rainbow 15s ease infinite;
+        }
+
+        @keyframes rainbow {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .container {
+            display: flex;
+            gap: 20px;
+        }
+        textarea {
+            width: 300px;
+            height: 200px;
+            font-size: 16px;
+            padding: 10px;
+        }
+        #translate-btn {
+            align-self: center;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <textarea id="original-text" placeholder="ここにパリク語を入力してください"></textarea>
+        <button id="translate-btn">翻訳する</button>
+        <textarea id="translated-text" readonly placeholder="翻訳結果"></textarea>
+    </div>
+
+    <script>
+        // モールス信号から文字へのマッピング
+        const morseToCharMap = {
+            '・ー': 'A', 'ー・・': 'B', 'ー・ー・': 'C', 'ー・・': 'D', '・': 'E',
+            '・・ー・': 'F', 'ーー・': 'G', '・・・・': 'H', '・・': 'I', '・ーーー': 'J',
+            'ー・ー': 'K', '・ー・・': 'L', 'ーー': 'M', 'ー・': 'N', 'ーーー': 'O',
+            '・ーー・': 'P', 'ーー・ー': 'Q', '・ー・': 'R', '・・・': 'S', 'ー': 'T',
+            '・・ー': 'U', '・・・ー': 'V', '・ーー': 'W', 'ー・・ー': 'X', 'ー・ーー': 'Y',
+            'ーー・・': 'Z', '・ーーーー': '1', '・・ーーー': '2', '・・・ーー': '3',
+            '・・・・ー': '4', '・・・・・': '5', 'ー・・・・': '6', 'ーー・・・': '7',
+            'ーーー・・': '8', 'ーーーー・': '9', 'ーーーーー': '0'
+        };
+
+        // パリク語をモールス信号に変換する関数
+        function parikToMorse(parikText) {
+            return parikText
+                .replace(/!/g, '・')
+                .replace(/i/g, 'ー')
+                .replace(/:/g, ' ')
+                .replace(/;/g, ' ');
+        }
+
+        // モールス信号を文字に変換する関数
+        function morseToText(morseText) {
+            return morseText.split(' ').map(signal => {
+                return morseToCharMap[signal] || '?';
+            }).join('');
+        }
+
+        // セミコロンとコロンを処理して翻訳する関数
+        function processParikSegments(parikText) {
+            let isUpperCase = false; // 大文字化フラグ
+            return parikText.split(';').map(segment => {
+                // セグメントが空の場合はスキップ
+                if (!segment.trim()) return '';
+
+                // 大文字化の指示があればフラグを更新
+                if (segment.includes(':')) {
+                    isUpperCase = true;
+                }
+
+                // パリク語をモールス信号に変換
+                const morseSignal = parikToMorse(segment);
+
+                // モールス信号を文字に変換
+                let result = morseToText(morseSignal);
+
+                // 大文字化を適用
+                if (isUpperCase && result.length > 0) {
+                    result = result.charAt(0).toUpperCase() + result.slice(1);
+                    isUpperCase = false; // フラグをリセット
+                }
+
+                return result;
+            }).join('');
+        }
+
+        // パリク語 > モールス信号 > 文字に変換する機能
+        document.getElementById('translate-btn').addEventListener('click', () => {
+            const originalText = document.getElementById('original-text').value;
+
+            // セミコロンとコロンで区切り、大文字を処理しながら翻訳
+            const translatedText = processParikSegments(originalText);
+
+            document.getElementById('translated-text').value = translatedText;
+        });
+    </script>
+</body>
+</html>
